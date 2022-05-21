@@ -4,10 +4,15 @@ from discord.ext import commands
 class Quests(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self._last_member = None
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('Bot is online.')
+
     @commands.command()
-    async def hello(ctx, name):
-        await ctx.send('Hello!' + name)
+    async def hello(self, ctx):
+        await ctx.send('Hello!')
+
     @commands.command()
     async def quest(): 
         return

@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS profiles (
 	level integer DEFAULT 1,
 	exp integer DEFAULT 0,
 	tokens integer DEFAULT 0,
-	current_quest text DEFAULT NULL
+	current_quest text DEFAULT NULL,
 	current_quest_exp integer DEFAULT NULL
 );

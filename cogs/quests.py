@@ -1,11 +1,10 @@
-from dataclasses import replace
 import discord
-from discord import Member, Embed, Color
 import random
-import string
+from dataclasses import replace
+from discord import Member, Embed, Color
 from discord.ext import commands
-from database import db
 from typing import Optional
+from database import db
 
 sitdown_quests = ['Drink [x] sips of water',
                   'Stretch your hands for [x] minutes', 
@@ -108,8 +107,9 @@ class Quests(commands.Cog):
         final_quests = make_quests()
         quest_statement = make_quest_statement(final_quests[0], final_quests[1])
         quest_db_statement = make_quest_db_entry(final_quests[0])
-        xp_to_gain = final_quests[1]
+        db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
+        #db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", final_quests[1], target.id)
         db.commit()
         await ctx.send(quest_statement)
 
@@ -119,7 +119,7 @@ class Quests(commands.Cog):
         final_quests = make_easy_quests()
         quest_statement = make_quest_statement(final_quests[0], final_quests[1])
         quest_db_statement = make_quest_db_entry(final_quests[0])
-        xp_to_gain = final_quests[1]
+        db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
         db.commit()
         await ctx.send(quest_statement)
@@ -127,7 +127,9 @@ class Quests(commands.Cog):
     @commands.command(name='complete')
     async def complete(self, ctx, target: Optional[Member]): 
         target = target or ctx.author
-        curr_xp = db.execute("SELECT exp FROM profiles WHERE user_id=?", target.id)
+        curr_xp = db.record("SELECT exp FROM profiles WHERE user_id=?", target.id)[0]
+        curr_quest_xp = db.record("SELECT current_quest_exp FROM profiles WHERE user_id=?", target.id)[0]
+        db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", (curr_quest_xp + curr_xp), target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", None, target.id)
-        db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", xp_to_gain + curr_xp, target.id)
-        await ctx.send("Okay! Here are your rewards: " + str(xp_to_gain) + "XP.")
+        db.commit()
+        await ctx.send("Okay! Here are your rewards: " + str(curr_quest_xp) + "XP.")

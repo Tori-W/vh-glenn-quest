@@ -8,8 +8,8 @@ from sqlite3 import connect
 # "Creating the database - Building a discord.py bot - Part 4"
 # Posted on YouTube on Apr 22, 2020
 
-DB_PATH = "database.db"
-BUILD_PATH = "build.sql"
+DB_PATH = "./database/database.db"
+BUILD_PATH = "./database/build.sql"
 
 connection = connect(DB_PATH, check_same_thread=False)
 cursor = connection.cursor()

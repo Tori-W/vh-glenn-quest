@@ -14,12 +14,14 @@ class Profile(Cog):
         target = target or ctx.author
 
         # Check if user has a profile. If not, create profile.
-        display_name = db.record("SELECT display_name FROM profiles WHERE user_id=?", target.id)[0] or None
+        display_name = db.record("SELECT display_name FROM profiles WHERE user_id=?", target.id) or None
 
         if display_name == None: # Create profile
             db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", ctx.author.id, ctx.author.name)
             db.commit() # save database
             display_name = ctx.author.name
+        else:
+            display_name = display_name[0] # Otherwise, it comes up in a tuple
 
         # Get stats
         profile_pic = target.avatar_url

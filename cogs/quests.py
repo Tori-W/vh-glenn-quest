@@ -1,5 +1,6 @@
 import discord
 import random
+import math
 from dataclasses import replace
 from discord import Member, Embed, Color
 from discord.ext import commands
@@ -106,7 +107,7 @@ class Quests(commands.Cog):
         await ctx.send(f'Bye, {ctx.author.name}!')
 
     @commands.command(name='quest')
-    @cooldown(1, 86400, BucketType.user)
+    #@cooldown(1, 86400, BucketType.user)
     async def quest(self, ctx, target: Optional[Member]): 
         await self._register_profile(ctx.author)
         target = target or ctx.author
@@ -140,6 +141,7 @@ class Quests(commands.Cog):
         db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", (curr_quest_xp + curr_xp), target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", None, target.id)
         db.commit()
+        await self._check_level(ctx)
         await ctx.send("Okay! Here are your rewards: " + str(curr_quest_xp) + "XP.")
 
     # Registers the user if they don't have a profile. Otherwise, does nothing.
@@ -147,8 +149,27 @@ class Quests(commands.Cog):
         if db.record("SELECT * FROM profiles WHERE user_id = ?", user.id) == None:
             db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", user.id, user.display_name)
             db.commit()
-    
+
+    async def _check_level(self, ctx):
+        print("Checking level")
+        curr_level = db.record("SELECT level FROM profiles WHERE user_id = ?", ctx.author.id)[0]
+        curr_xp = db.record("SELECT exp FROM profiles WHERE user_id = ?", ctx.author.id)[0]
+        needed_xp = 1000*math.log(curr_level + 1, 2)
+        print(f"curr_xp: {curr_xp}")
+        print(f"needed_xp: {needed_xp}")
+        xp_left = curr_xp - needed_xp
+        print(f"xp_left: {xp_left}")
+        if xp_left > 0:
+            db.execute("UPDATE profiles SET level = level + 1 WHERE user_id = ?", ctx.author.id)
+            db.execute("UPDATE profiles SET exp = ? WHERE user_id = ?", xp_left, ctx.author.id)
+            db.commit()
+            new_level = db.record("SELECT level FROM profiles WHERE user_id = ?", ctx.author.id)[0]
+            message = "Congratulations! You are now level " + str(new_level) + "!"
+            await ctx.send(message)
+            
+    """"
     @quest.event
     async def on_quest_error(ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send("Try again tomorrow.")
+            """

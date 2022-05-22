@@ -148,7 +148,7 @@ class Quests(commands.Cog):
             db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", user.id, user.display_name)
             db.commit()
     
-    @quest.event
-    async def on_quest_error(ctx, error):
+    @quest.error
+    async def on_quest_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send("Try again tomorrow.")

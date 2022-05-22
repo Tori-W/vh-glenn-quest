@@ -149,6 +149,23 @@ class Quests(commands.Cog):
         if db.record("SELECT * FROM profiles WHERE user_id = ?", user.id) == None:
             db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", user.id, user.display_name)
             db.commit()
+
+    async def _check_level(self, ctx):
+        print("Checking level")
+        curr_level = db.record("SELECT level FROM profiles WHERE user_id = ?", ctx.author.id)[0]
+        curr_xp = db.record("SELECT exp FROM profiles WHERE user_id = ?", ctx.author.id)[0]
+        needed_xp = 1000*math.log(curr_level + 1, 2)
+        print(f"curr_xp: {curr_xp}")
+        print(f"needed_xp: {needed_xp}")
+        xp_left = curr_xp - needed_xp
+        print(f"xp_left: {xp_left}")
+        if xp_left > 0:
+            db.execute("UPDATE profiles SET level = level + 1 WHERE user_id = ?", ctx.author.id)
+            db.execute("UPDATE profiles SET exp = ? WHERE user_id = ?", xp_left, ctx.author.id)
+            db.commit()
+            new_level = db.record("SELECT level FROM profiles WHERE user_id = ?", ctx.author.id)[0]
+            message = "Congratulations! You are now level " + str(new_level) + "!"
+            await ctx.send(message)
     
     @quest.error
     async def on_quest_error(self, ctx, error):

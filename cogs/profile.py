@@ -38,6 +38,13 @@ class Profile(Cog):
 
         await ctx.send(embed=embed)
 
+    # Registers the user if they don't have a profile. Otherwise, does nothing.
+    async def _register_profile(self, user):
+        if db.record("SELECT * FROM profiles WHERE user_id = ?", user.id) == None:
+            db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", user.id, user.display_name)
+            db.commit()
+        
+
 def setup(bot):
     bot.add_cog(Profile(bot))
     

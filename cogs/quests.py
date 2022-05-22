@@ -1,5 +1,6 @@
 import discord
 import random
+import math
 from dataclasses import replace
 from discord import Member, Embed, Color
 from discord.ext import commands
@@ -106,7 +107,7 @@ class Quests(commands.Cog):
         await ctx.send(f'Bye, {ctx.author.name}!')
 
     @commands.command(name='quest')
-    @cooldown(1, 86400, BucketType.user)
+    #@cooldown(1, 86400, BucketType.user)
     async def quest(self, ctx, target: Optional[Member]): 
         await self._register_profile(ctx.author)
         target = target or ctx.author
@@ -140,6 +141,7 @@ class Quests(commands.Cog):
         db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", (curr_quest_xp + curr_xp), target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", None, target.id)
         db.commit()
+        await self._check_level(ctx)
         await ctx.send("Okay! Here are your rewards: " + str(curr_quest_xp) + "XP.")
 
     # Registers the user if they don't have a profile. Otherwise, does nothing.

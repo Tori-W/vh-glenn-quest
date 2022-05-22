@@ -1,11 +1,8 @@
 from discord import Member, Embed, Color
 from discord.ext.commands import Cog
 from discord.ext.commands import command
-
 from typing import Optional
-
-from ..db import db # Need to check that this is the correct way to import
-
+from database import db # Need to check that this is the correct way to import
 
 class Profile(Cog):
     def __init__(self, bot):

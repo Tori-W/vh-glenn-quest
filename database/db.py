@@ -1,7 +1,7 @@
 from os.path import isfile
 from sqlite3 import connect
 
-from apscheduler.triggers.cron import CronTrigger
+# from apscheduler.triggers.cron import CronTrigger
 
 # Code was created with reference to Carberra Tutorials' video:
 # https://www.youtube.com/watch?v=4EIy0bw7s-s
@@ -12,7 +12,7 @@ DB_PATH = "database.db"
 BUILD_PATH = "build.sql"
 
 connection = connect(DB_PATH, check_same_thread=False)
-cursor = cxn.cursor()
+cursor = connection.cursor()
 
 def with_commit(func):
     def inner(*args, **kwargs):
@@ -32,8 +32,8 @@ def commit():
     connection.commit()
 
 # Save database every minute (when second = 0)
-def autosave(sched):
-    sched.add_job(commit, CronTrigger(second=0))
+# def autosave(sched):
+    # sched.add_job(commit, CronTrigger(second=0))
 
 # Use to execute a SELECT statement and receive the first matching row
 # Example use:

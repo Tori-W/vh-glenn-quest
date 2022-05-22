@@ -17,9 +17,12 @@ standup_quests = ['Stretch for [x] minutes',
                   'Do [x] crunches',]
 announcements = ['Say 1 thing that made you happy today',
                  'Say 1 thing you want to do today',
-                 'Say 1 thing you want to accomplish']
+                 'Say 1 thing you want to accomplish',
+                 'Say 1 thing you want to get done tomorrow',
+                 'Say 1 thing that makes you happy']
 all_quests = sitdown_quests + standup_quests + announcements
 easy_quests = sitdown_quests
+normal_quests = sitdown_quests + standup_quests
 
 class Quests(commands.Cog):
     def __init__(self, bot):
@@ -39,13 +42,13 @@ class Quests(commands.Cog):
 
     @commands.command(name='quest')
     async def quest(self, ctx): 
-        final_quests = make_quests(all_quests)
+        final_quests = make_quests()
         quest_statement = make_quest_statement(final_quests)
         await ctx.send(quest_statement)
 
     @commands.command(name='easyquest')
     async def easyquest(self, ctx): 
-        final_quests = make_easy_quests(sitdown_quests)
+        final_quests = make_easy_quests()
         quest_statement = make_quest_statement(final_quests)
         await ctx.send(quest_statement)
 
@@ -57,25 +60,29 @@ def give_int(quest):
 def make_quest_statement(final_quests): 
     quest_statement = ""
     for i in range(len(final_quests)):
-            if (i == 0):
-                quest_statement = "Here are your quests for today! " + final_quests[i]
-            elif (i == (len(final_quests) - 1)): 
-                quest_statement = quest_statement + ", and " + final_quests[i].lower() + "."
-            else: 
-                quest_statement = quest_statement + ", " + final_quests[i].lower()
+        if (i == 0):
+            quest_statement = "Here are your quests for today! " + final_quests[i]
+        elif (i == (len(final_quests) - 1)): 
+            quest_statement = quest_statement + ", and " + final_quests[i].lower() + "."
+        else: 
+            quest_statement = quest_statement + ", " + final_quests[i].lower()
     return quest_statement
 
-def make_quests(all_quests):
-    num_quests_picked = random.randint(2,5)
-    quest_picker = random.sample(all_quests, num_quests_picked)
+def make_quests():
+    num_quests_picked = random.randint(2,4)
+    quest_choice_part_1 = random.sample(normal_quests, num_quests_picked)
+    quest_choice_part_2 = random.sample(announcements, 1)
+    quest_picker = quest_choice_part_1 + quest_choice_part_2
     final_quests = []
     for quest in quest_picker: 
         final_quests.append(give_int(quest))
     return final_quests
 
-def make_easy_quests(all_quests):
-    num_quests_picked = random.randint(1,3)
-    quest_picker = random.sample(all_quests, num_quests_picked)
+def make_easy_quests():
+    num_quests_picked = random.randint(1,2)
+    quest_choice_part_1 = random.sample(easy_quests, num_quests_picked)
+    quest_choice_part_2 = random.sample(announcements, 1)
+    quest_picker = quest_choice_part_1 + quest_choice_part_2
     final_quests = []
     for quest in quest_picker: 
         final_quests.append(give_int(quest))

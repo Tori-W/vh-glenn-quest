@@ -57,3 +57,7 @@ def records(command, *values):
 def execute(command, *values):
     cursor.execute(command, tuple(values))
     return cursor.rowcount
+
+def scriptexec(path):
+	with open(path, "r", encoding="utf-8") as script:
+		cursor.executescript(script.read())

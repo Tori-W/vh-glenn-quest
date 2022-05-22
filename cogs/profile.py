@@ -14,7 +14,7 @@ class Profile(Cog):
         target = target or ctx.author
 
         # Check if user has a profile. If not, create profile.
-        display_name = db.record("SELECT display_name FROM profiles WHERE user_id=?", target.id) or None
+        display_name = db.record("SELECT display_name FROM profiles WHERE user_id=?", target.id)[0] or None
 
         if display_name == None: # Create profile
             db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", ctx.author.id, ctx.author.name)
@@ -24,7 +24,7 @@ class Profile(Cog):
         # Get stats
         profile_pic = target.avatar_url
         level, exp, tokens = db.records("SELECT level, exp, tokens FROM profiles WHERE user_id=?", target.id)[0]
-        current_quest = db.record("SELECT current_quest FROM profiles WHERE user_id=?", target.id) or "N/A"
+        current_quest = db.record("SELECT current_quest FROM profiles WHERE user_id=?", target.id)[0]
 
         # Create embed
         embed = Embed(title = display_name, color = Color.orange())

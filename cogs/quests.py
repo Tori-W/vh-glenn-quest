@@ -3,8 +3,10 @@ import random
 from dataclasses import replace
 from discord import Member, Embed, Color
 from discord.ext import commands
+from discord.ext.commands import BucketType, cooldown
 from typing import Optional
 from database import db
+
 
 sitdown_quests = ['Drink [x] sips of water',
                   'Stretch your hands for [x] minutes', 
@@ -95,14 +97,18 @@ class Quests(commands.Cog):
 
     @commands.command(name='hello')
     async def hello(self, ctx):
+        await self._register_profile(ctx.author)
         await ctx.send(f'Hello, {ctx.author.name}!')
 
     @commands.command(name='bye')
     async def bye(self, ctx):
+        await self._register_profile(ctx.author)
         await ctx.send(f'Bye, {ctx.author.name}!')
 
     @commands.command(name='quest')
+    @cooldown(1, 86400, BucketType.user)
     async def quest(self, ctx, target: Optional[Member]): 
+        await self._register_profile(ctx.author)
         target = target or ctx.author
         final_quests = make_quests()
         quest_statement = make_quest_statement(final_quests[0], final_quests[1])
@@ -115,6 +121,7 @@ class Quests(commands.Cog):
 
     @commands.command(name='easyquest')
     async def easyquest(self, ctx, target: Optional[Member]): 
+        await self._register_profile(ctx.author)
         target = target or ctx.author
         final_quests = make_easy_quests()
         quest_statement = make_quest_statement(final_quests[0], final_quests[1])
@@ -126,6 +133,7 @@ class Quests(commands.Cog):
 
     @commands.command(name='complete')
     async def complete(self, ctx, target: Optional[Member]): 
+        await self._register_profile(ctx.author)
         target = target or ctx.author
         curr_xp = db.record("SELECT exp FROM profiles WHERE user_id=?", target.id)[0]
         curr_quest_xp = db.record("SELECT current_quest_exp FROM profiles WHERE user_id=?", target.id)[0]
@@ -133,3 +141,14 @@ class Quests(commands.Cog):
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", None, target.id)
         db.commit()
         await ctx.send("Okay! Here are your rewards: " + str(curr_quest_xp) + "XP.")
+
+    # Registers the user if they don't have a profile. Otherwise, does nothing.
+    async def _register_profile(self, user):
+        if db.record("SELECT * FROM profiles WHERE user_id = ?", user.id) == None:
+            db.execute("INSERT INTO profiles (user_id, display_name) VALUES (?, ?)", user.id, user.display_name)
+            db.commit()
+    
+    @quest.event
+    async def on_quest_error(ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send("Try again tomorrow.")

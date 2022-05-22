@@ -1,8 +1,11 @@
 from dataclasses import replace
 import discord
+from discord import Member, Embed, Color
 import random
 import string
 from discord.ext import commands
+from database import db
+from typing import Optional
 
 sitdown_quests = ['Drink [x] sips of water',
                   'Stretch your hands for [x] minutes', 
@@ -24,6 +27,65 @@ all_quests = sitdown_quests + standup_quests + announcements
 easy_quests = sitdown_quests
 normal_quests = sitdown_quests + standup_quests
 
+def give_int(quest):
+    num = random.randint(3,7)
+    with_val = quest.replace("[x]", str(num))
+    return (with_val, num)
+
+def make_quest_statement(quests, xp_gained): 
+    quest_statement = ""
+    for i in range(len(quests)):
+        if (i == 0):
+            quest_statement = "Here are your quests for today! " + quests[i]
+        elif (i == (len(quests) - 1)): 
+            quest_statement = quest_statement + ", and " + quests[i].lower() + "."
+        else: 
+            quest_statement = quest_statement + ", " + quests[i].lower()
+    quest_statement = quest_statement + " Rewards: " + str(xp_gained) + "XP."
+    return quest_statement
+
+def make_quest_db_entry(quests): 
+    quest_statement = ""
+    for i in range(len(quests)):
+        if (i == 0):
+            quest_statement = quests[i]
+        elif (i == (len(quests) - 1)): 
+            quest_statement = quest_statement + ", and " + quests[i].lower() + "."
+        else: 
+            quest_statement = quest_statement + ", " + quests[i].lower()
+    return quest_statement
+
+def make_quests():
+    num_quests_picked = random.randint(2,4)
+    quest_choice_part_1 = random.sample(normal_quests, num_quests_picked)
+    quest_choice_part_2 = random.sample(announcements, 1)
+    quest_picker = quest_choice_part_1 + quest_choice_part_2
+    quests = []
+    counter = 0
+    for quest in quest_picker: 
+        randomize_quest = give_int(quest)
+        quests.append(randomize_quest[0])
+        counter += randomize_quest[1]
+    xp_generated = 50 + (50 * num_quests_picked) + (8 * counter)
+    return (quests, xp_generated)
+
+def make_easy_quests():
+    num_quests_picked = random.randint(1,2)
+    quest_choice_part_1 = random.sample(easy_quests, num_quests_picked)
+    quest_choice_part_2 = random.sample(announcements, 1)
+    quest_picker = quest_choice_part_1 + quest_choice_part_2
+    quests = []
+    counter = 0
+    for quest in quest_picker: 
+        randomize_quest = give_int(quest)
+        quests.append(randomize_quest[0])
+        counter += randomize_quest[1]
+    xp_generated = 50 + (50 * num_quests_picked) + (8 * counter)
+    return (quests, xp_generated)
+
+def setup(bot): 
+        bot.add_cog(Quests(bot)) 
+
 class Quests(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -41,52 +103,31 @@ class Quests(commands.Cog):
         await ctx.send(f'Bye, {ctx.author.name}!')
 
     @commands.command(name='quest')
-    async def quest(self, ctx): 
+    async def quest(self, ctx, target: Optional[Member]): 
+        target = target or ctx.author
         final_quests = make_quests()
-        quest_statement = make_quest_statement(final_quests)
+        quest_statement = make_quest_statement(final_quests[0], final_quests[1])
+        quest_db_statement = make_quest_db_entry(final_quests[0])
+        xp_to_gain = final_quests[1]
+        db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
+        db.commit()
         await ctx.send(quest_statement)
 
     @commands.command(name='easyquest')
-    async def easyquest(self, ctx): 
+    async def easyquest(self, ctx, target: Optional[Member]): 
+        target = target or ctx.author
         final_quests = make_easy_quests()
-        quest_statement = make_quest_statement(final_quests)
+        quest_statement = make_quest_statement(final_quests[0], final_quests[1])
+        quest_db_statement = make_quest_db_entry(final_quests[0])
+        xp_to_gain = final_quests[1]
+        db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
+        db.commit()
         await ctx.send(quest_statement)
 
-def give_int(quest):
-    num = random.randint(3,7)
-    with_val = quest.replace("[x]", str(num))
-    return with_val
-
-def make_quest_statement(final_quests): 
-    quest_statement = ""
-    for i in range(len(final_quests)):
-        if (i == 0):
-            quest_statement = "Here are your quests for today! " + final_quests[i]
-        elif (i == (len(final_quests) - 1)): 
-            quest_statement = quest_statement + ", and " + final_quests[i].lower() + "."
-        else: 
-            quest_statement = quest_statement + ", " + final_quests[i].lower()
-    return quest_statement
-
-def make_quests():
-    num_quests_picked = random.randint(2,4)
-    quest_choice_part_1 = random.sample(normal_quests, num_quests_picked)
-    quest_choice_part_2 = random.sample(announcements, 1)
-    quest_picker = quest_choice_part_1 + quest_choice_part_2
-    final_quests = []
-    for quest in quest_picker: 
-        final_quests.append(give_int(quest))
-    return final_quests
-
-def make_easy_quests():
-    num_quests_picked = random.randint(1,2)
-    quest_choice_part_1 = random.sample(easy_quests, num_quests_picked)
-    quest_choice_part_2 = random.sample(announcements, 1)
-    quest_picker = quest_choice_part_1 + quest_choice_part_2
-    final_quests = []
-    for quest in quest_picker: 
-        final_quests.append(give_int(quest))
-    return final_quests
-
-def setup(bot): 
-        bot.add_cog(Quests(bot)) 
+    @commands.command(name='complete')
+    async def complete(self, ctx, target: Optional[Member]): 
+        target = target or ctx.author
+        curr_xp = db.execute("SELECT exp FROM profiles WHERE user_id=?", target.id)
+        db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", None, target.id)
+        db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", xp_to_gain + curr_xp, target.id)
+        await ctx.send("Okay! Here are your rewards: " + str(xp_to_gain) + "XP.")

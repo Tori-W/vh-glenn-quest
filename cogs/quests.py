@@ -116,30 +116,33 @@ class Quests(commands.Cog):
     # Quest command.
     @commands.command(name='quest')
     @cooldown(1, 86400, BucketType.user)
-    async def quest(self, ctx, target: Optional[Member]): 
+    async def quest(self, ctx, target: Optional[Member], type: Optional[str]): 
         await self._register_profile(ctx.author)
         target = target or ctx.author
-        final_quests = make_quests()
+        if (type == 'easy'):
+            final_quests = make_easy_quests()
+        else: 
+            final_quests = make_quests()
         quest_statement = make_quest_statement(final_quests[0], final_quests[1])
         quest_db_statement = make_quest_db_entry(final_quests[0])
         db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
-        #db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", final_quests[1], target.id)
         db.commit()
         await ctx.send(quest_statement)
 
-    # Easy quest command.
-    @commands.command(name='easyquest')
-    async def easyquest(self, ctx, target: Optional[Member]): 
-        await self._register_profile(ctx.author)
-        target = target or ctx.author
-        final_quests = make_easy_quests()
-        quest_statement = make_quest_statement(final_quests[0], final_quests[1])
-        quest_db_statement = make_quest_db_entry(final_quests[0])
-        db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
-        db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
-        db.commit()
-        await ctx.send(quest_statement)
+    # # Easy quest command.
+    # @commands.command(name='easyquest')
+    # @cooldown(1, 86400, BucketType.user)
+    # async def easyquest(self, ctx, target: Optional[Member]): 
+    #     await self._register_profile(ctx.author)
+    #     target = target or ctx.author
+    #     final_quests = make_easy_quests()
+    #     quest_statement = make_quest_statement(final_quests[0], final_quests[1])
+    #     quest_db_statement = make_quest_db_entry(final_quests[0])
+    #     db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
+    #     db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
+    #     db.commit()
+    #     await ctx.send(quest_statement)
 
     # Updates the db if the user has completed their quest.
     @commands.command(name='complete')

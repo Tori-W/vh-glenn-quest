@@ -32,7 +32,7 @@ class Profile(Cog):
         embed = Embed(title = display_name, color = Color.orange())
         embed.add_field(name = 'Level', value = level)
         embed.add_field(name = 'EXP', value = int(exp))
-        embed.add_field(name = 'Tokens', value = tokens)
+        #embed.add_field(name = 'Tokens', value = tokens)
         embed.add_field(name = 'Quest', value = current_quest)
         embed.set_thumbnail(url=profile_pic)
 

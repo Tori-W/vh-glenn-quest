@@ -6,4 +6,5 @@ CREATE TABLE IF NOT EXISTS profiles (
 	tokens integer DEFAULT 0,
 	current_quest text DEFAULT NULL,
 	current_quest_exp integer DEFAULT NULL
+	has_taken_quest integer DEFAULT NULL
 );

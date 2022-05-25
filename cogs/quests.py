@@ -185,6 +185,7 @@ class Quests(commands.Cog):
         quest_statement = make_quest_statement(final_quests[0], final_quests[1])
         quest_db_statement = make_quest_db_entry(final_quests[0])
         db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
+        #db.execute("UPDATE profiles SET has_taken_quest = ? WHERE user_id=?", 1, target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
         db.commit()
         await ctx.send(f'{ctx.author.mention}\n' + quest_statement)
@@ -253,5 +254,3 @@ class Quests(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             gn_cd_statement = random.choice(gn_cd_roulette)
             await ctx.send(f'{ctx.author.mention} ' + gn_cd_statement)
-
-

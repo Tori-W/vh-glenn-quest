@@ -33,7 +33,7 @@ announcements = ['Say 1 thing that made you happy today',
                  'Say 1 thing that makes you happy']
 easy_quests = sitdown_quests
 normal_quests = sitdown_quests + standup_quests
-hard_quests = standup_quests + active_quests 
+hard_quests = standup_quests
 
 good_morning_roulette = ['Have a great day!',
                          'Rise and shine!',
@@ -169,7 +169,7 @@ class Quests(commands.Cog):
     # Quest command.
     # TODO: make cd reset at a common time (user's time)
     @commands.command(name='quest')
-    @cooldown(1, 86400, BucketType.user)
+    #@cooldown(1, 86400, BucketType.user)
     async def quest(self, ctx, target: Optional[Member], type: Optional[str]): 
         await self._register_profile(ctx.author)
         target = target or ctx.author

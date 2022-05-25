@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import BucketType, cooldown
 from typing import Optional, final
 from database import db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # TODO: random synchronized encounters, several people have to do it in order to get the xp + completion
 
@@ -169,7 +169,7 @@ class Quests(commands.Cog):
     # Quest command.
     # TODO: make cd reset at a common time (user's time)
     @commands.command(name='quest')
-    #@cooldown(1, 86400, BucketType.user)
+    @cooldown(1, 86400, BucketType.user)
     async def quest(self, ctx, target: Optional[Member], type: Optional[str]): 
         await self._register_profile(ctx.author)
         target = target or ctx.author
@@ -232,11 +232,13 @@ class Quests(commands.Cog):
             await ctx.send(message)
     
     # CD error message if user attempts to ping for multiple quests in a day.
-    # TODO: add time remaining on cd
     @quest.error
     async def on_quest_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            await ctx.send("Try again tomorrow.")
+            remaining_time = str(timedelta(seconds=int(error.retry_after)))
+            await ctx.send(f'{ctx.author.mention} Try again in ' + str(remaining_time + '.'))
+            #embed = discord.Embed(title="Cooldown Alert!", description=f'{ctx.author.mention}, you can use this command again in ' + str(remaining_time), color=0xE74C3C)
+            #await ctx.send(embed=embed)
 
     # CD error message if user attempts to ping for multiple quests in a day.
     @goodmorning.error

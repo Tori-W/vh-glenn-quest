@@ -110,22 +110,23 @@ class Quests(commands.Cog):
     @commands.command(name='hello')
     async def hello(self, ctx):
         await self._register_profile(ctx.author)
-        await ctx.send(f'Hello, {ctx.author.name}!')
+        await ctx.send(f"Hello, {ctx.author.mention}!")
 
     # Goodbye command.
     @commands.command(name='bye')
     async def bye(self, ctx):
         await self._register_profile(ctx.author)
-        await ctx.send(f'Bye, {ctx.author.name}!')
+        await ctx.send(f'Bye, {ctx.author.mention}!')
 
     # Thanks command.
     @commands.command(name='thanks')
     async def thanks(self, ctx):
         await self._register_profile(ctx.author)
-        await ctx.send(f'You\'re welcome, {ctx.author.name}! ^^')
+        await ctx.send(f'You\'re welcome, {ctx.author.mention}! ^^')
 
-    # TODO: Good morning command --- ALSO GM?, need to check if time is before 12 pm in the person's timezone
-    @commands.command(name='goodmorning', alias = ['gm'])
+    # Good morning command 
+    # TODO: Need to check if time is before 12 pm in the person's timezone
+    @commands.command(name='goodmorning', aliases = ['gm'])
     async def goodmorning(self, ctx):
         await self._register_profile(ctx.author)
         curr_time = datetime.now()
@@ -135,18 +136,19 @@ class Quests(commands.Cog):
         
         #if curr_time.hour() <= 
 
-        await ctx.send(f'Good morning, {ctx.author.name}!')
+        await ctx.send(f'Good morning, {ctx.author.mention}!')
 
-    # TODO: Good night command --- ALSO GN?, need to check if time is before 2 am in the person's timezone
+    # Good night command
+    # TODO:  Need to check if time is before 2 am in the person's timezone
     @commands.command(name='goodnight', alias = ['gn'])
     async def goodnight(self, ctx):
         await self._register_profile(ctx.author)
-        await ctx.send(f'Good night, {ctx.author.name}!')
+        await ctx.send(f'Good night, {ctx.author.mention}!')
 
     # Quest command.
     # TODO: make cd reset at a common time (user's time)
     @commands.command(name='quest')
-    @cooldown(1, 86400, BucketType.user)
+    #@cooldown(1, 86400, BucketType.user)
     async def quest(self, ctx, target: Optional[Member], type: Optional[str]): 
         await self._register_profile(ctx.author)
         target = target or ctx.author
@@ -164,14 +166,14 @@ class Quests(commands.Cog):
         db.execute("UPDATE profiles SET current_quest_exp = ? WHERE user_id=?", final_quests[1], target.id)
         db.execute("UPDATE profiles SET current_quest = ? WHERE user_id=?", quest_db_statement, target.id)
         db.commit()
-        await ctx.send(quest_statement)
+        await ctx.send(f'{ctx.author.mention}\n' + quest_statement)
 
     # Updates the db if the user has completed their quest. 
-    # TODO: dani was after !complete so it chose her as target id
+    # TODO: different message if hasnt taken a quest yet that day vs has + trying to complete again
     @commands.command(name='complete')
-    async def complete(self, ctx, target: Optional[Member]): 
+    async def complete(self, ctx): 
         await self._register_profile(ctx.author)
-        target = target or ctx.author
+        target = ctx.author
         curr_xp = db.record("SELECT exp FROM profiles WHERE user_id=?", target.id)[0]
         curr_quest_xp = db.record("SELECT current_quest_exp FROM profiles WHERE user_id=?", target.id)[0]       
         if (curr_quest_xp == None):

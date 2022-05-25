@@ -1,3 +1,4 @@
+from ast import alias
 import discord
 import random
 import math
@@ -7,6 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import BucketType, cooldown
 from typing import Optional, final
 from database import db
+from datetime import datetime
 
 # TODO: random synchronized encounters, several people have to do it in order to get the xp + completion
 
@@ -66,7 +68,6 @@ def make_quest_db_entry(quests):
 
 # Assembles a tuple of (quest, xp) for normal quests.
 # Type: 0 = easy, 1 = normal, 2 = hard
-# TODO: make random num scale off of level
 def make_quests(type):
     num_quests_picked = 0
     quests = []
@@ -124,13 +125,20 @@ class Quests(commands.Cog):
         await ctx.send(f'You\'re welcome, {ctx.author.name}! ^^')
 
     # TODO: Good morning command --- ALSO GM?, need to check if time is before 12 pm in the person's timezone
-    @commands.command(name='goodmorning')
+    @commands.command(name='goodmorning', alias = ['gm'])
     async def goodmorning(self, ctx):
         await self._register_profile(ctx.author)
+        curr_time = datetime.now()
+
+        curr_time_str = curr_time.strftime("%H:%M:%S")
+        print("Current Time =", curr_time_str)
+        
+        #if curr_time.hour() <= 
+
         await ctx.send(f'Good morning, {ctx.author.name}!')
 
     # TODO: Good night command --- ALSO GN?, need to check if time is before 2 am in the person's timezone
-    @commands.command(name='goodnight')
+    @commands.command(name='goodnight', alias = ['gn'])
     async def goodnight(self, ctx):
         await self._register_profile(ctx.author)
         await ctx.send(f'Good night, {ctx.author.name}!')

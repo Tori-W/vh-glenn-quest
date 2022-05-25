@@ -35,6 +35,20 @@ easy_quests = sitdown_quests
 normal_quests = sitdown_quests + standup_quests
 hard_quests = standup_quests + active_quests 
 
+good_morning_roulette = ['Have a great day!',
+                         'Rise and shine!',
+                         'Hope your day goes well!',
+                         'Enjoy your day!']
+good_night_roulette = ['Sleep well!',
+                       'Don\'t let the bed bugs bite!',
+                       'Sweet dreams!',
+                       'Sleep tight!',
+                       'See you tomorrow!']
+gm_cd_roulette = ['Good morning again!',
+                  'We\'ve already said good morning!']
+gn_cd_roulette = ['Good night again!',
+                  'We\'ve already said good night!']
+
 # Assigns a quest a random value for how many the user has to do.
 def give_int(quest):
     num = random.randint(3,7)
@@ -107,43 +121,50 @@ class Quests(commands.Cog):
         print('Bot is online.')
 
     # Hello command.
-    @commands.command(name='hello')
+    @commands.command(name='hello', aliases = ['hi', 'heya', 'hihi', 'Hello', 'HELLO'])
     async def hello(self, ctx):
         await self._register_profile(ctx.author)
         await ctx.send(f"Hello, {ctx.author.mention}!")
 
     # Goodbye command.
-    @commands.command(name='bye')
+    @commands.command(name='bye', aliases = ['Bye', 'byebye', 'BYE'])
     async def bye(self, ctx):
         await self._register_profile(ctx.author)
         await ctx.send(f'Bye, {ctx.author.mention}!')
 
     # Thanks command.
-    @commands.command(name='thanks')
+    @commands.command(name='thanks', aliases = ['ty', 'Thanks', 'TY'])
     async def thanks(self, ctx):
         await self._register_profile(ctx.author)
         await ctx.send(f'You\'re welcome, {ctx.author.mention}! ^^')
 
     # Good morning command 
     # TODO: Need to check if time is before 12 pm in the person's timezone
-    @commands.command(name='goodmorning', aliases = ['gm'])
+    @commands.command(name='goodmorning', aliases = ['gm', 'GM'])
+    @cooldown(1, 57600, BucketType.user)
     async def goodmorning(self, ctx):
         await self._register_profile(ctx.author)
-        curr_time = datetime.now()
-
-        curr_time_str = curr_time.strftime("%H:%M:%S")
-        print("Current Time =", curr_time_str)
-        
-        #if curr_time.hour() <= 
-
-        await ctx.send(f'Good morning, {ctx.author.mention}!')
+        #curr_time = datetime.now()
+        #curr_time_str = curr_time.strftime("%H:%M:%S")
+        #print("Current Time =", curr_time_str)
+        target = ctx.author
+        curr_xp = db.record("SELECT exp FROM profiles WHERE user_id=?", target.id)[0]
+        db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", (curr_xp + 10), target.id)
+        gm_statement = random.choice(good_morning_roulette)
+        await ctx.send(f'{ctx.author.mention} ' + gm_statement)
 
     # Good night command
     # TODO:  Need to check if time is before 2 am in the person's timezone
-    @commands.command(name='goodnight', alias = ['gn'])
+    @commands.command(name='goodnight', aliases = ['gn', 'GN'])
+    @cooldown(1, 57600, BucketType.user)
     async def goodnight(self, ctx):
         await self._register_profile(ctx.author)
-        await ctx.send(f'Good night, {ctx.author.mention}!')
+        #print(ctx.message.created_at)
+        target = ctx.author
+        curr_xp = db.record("SELECT exp FROM profiles WHERE user_id=?", target.id)[0]
+        db.execute("UPDATE profiles SET exp = ? WHERE user_id=?", (curr_xp + 10), target.id)
+        gn_statement = random.choice(good_night_roulette)
+        await ctx.send(f'{ctx.author.mention} ' + gn_statement)
 
     # Quest command.
     # TODO: make cd reset at a common time (user's time)
@@ -216,3 +237,19 @@ class Quests(commands.Cog):
     async def on_quest_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send("Try again tomorrow.")
+
+    # CD error message if user attempts to ping for multiple quests in a day.
+    @goodmorning.error
+    async def on_quest_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            gm_cd_statement = random.choice(gm_cd_roulette)
+            await ctx.send(f'{ctx.author.mention} ' + gm_cd_statement)
+
+    # CD error message if user attempts to ping for multiple quests in a day.
+    @goodnight.error
+    async def on_quest_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            gn_cd_statement = random.choice(gn_cd_roulette)
+            await ctx.send(f'{ctx.author.mention} ' + gn_cd_statement)
+
+
